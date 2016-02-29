@@ -1,0 +1,6 @@
+
+1.0.1
++context menu
+
+1.0.0 (feb 2016)
+init
