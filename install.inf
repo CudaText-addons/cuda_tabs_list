@@ -3,6 +3,7 @@ title=Tabs List
 desc=Shows in side-panel "Tabs": list of opened tabs
 type=cudatext-plugin
 subdir=cuda_tabs_list
+homepage=https://github.com/CudaText-addons/cuda_tabs_list
 
 [item1]
 section=commands
