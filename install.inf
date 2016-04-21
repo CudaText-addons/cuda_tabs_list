@@ -12,4 +12,4 @@ method=open
 
 [item2]
 section=events
-events=on_focus,on_open,on_tab_move,on_panel,on_state
+events=on_focus,on_open,on_tab_move,on_panel,on_state,on_start

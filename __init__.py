@@ -7,14 +7,11 @@ class Command:
     h_tree = None
     busy_update = False
     
-    def open(self):
-        if app_api_version()<'1.0.127':
-            msg_box('Tabs List needs newer app', MB_OK or MB_ICONERROR)
-            return
-    
+    def open(self, activate_tab=True):
         ed.cmd(cudatext_cmd.cmd_ShowSidePanelAsIs)
         app_proc(PROC_SIDEPANEL_ADD, self.title+",-1,tree")
-        app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
+        if activate_tab:
+            app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
         
         app_proc(PROC_MENU_CLEAR, 'side:'+self.title)
         app_proc(PROC_MENU_ADD, 'side:'+self.title+';cuda_tabs_list,menu_close_sel;Close;-1')
@@ -69,6 +66,9 @@ class Command:
     def on_state(self, ed_self, state):
         if state==EDSTATE_TAB_TITLE:
             self.update()
+            
+    def on_start(self, ed_self):
+        self.open(False)
 
     def ed_of_sel(self):
         h_item = tree_proc(self.h_tree, TREE_ITEM_GET_SELECTED)

@@ -1,6 +1,7 @@
 
-1.0.1
-+context menu
+2016.04.21
++ auto-load on start
+- fix for "Find in files"
 
-1.0.0 (feb 2016)
+2016.02
 init
