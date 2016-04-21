@@ -65,6 +65,10 @@ class Command:
         if id_event=='on_sel':
             e = self.ed_of_sel()
             e.focus()
+            
+    def on_state(self, ed_self, state):
+        if state==EDSTATE_TAB_TITLE:
+            self.update()
 
     def ed_of_sel(self):
         h_item = tree_proc(self.h_tree, TREE_ITEM_GET_SELECTED)
