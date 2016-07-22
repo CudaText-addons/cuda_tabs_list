@@ -2,6 +2,10 @@ from cudatext import *
 import cudatext_cmd
 import re
 
+if app_api_version()<'1.0.151':
+    msg_box('TabsList needs updated CudaText', MB_OK+MB_ICONERROR)
+
+
 class Command:
     title = 'Tabs'
     h_tree = None
@@ -45,8 +49,9 @@ class Command:
         handles = ed_handles()
         for h in handles:
             edit = Editor(h)
-            prefix = '[%d] '%(h-handles[0]+1)
-            name = prefix + edit.get_prop(PROP_TAB_TITLE)
+            suffix = ' '*80 + '[Tab%d]'%(h-handles[0]+1)
+            prefix_mod = '*' if edit.get_prop(PROP_MODIFIED) else ''
+            name = prefix_mod + edit.get_prop(PROP_TAB_TITLE) + suffix
             h_item = tree_proc(self.h_tree, TREE_ITEM_ADD, 0, -1, name, -1)
             if edit.get_prop(PROP_TAG)=='tag':
                 tree_proc(self.h_tree, TREE_ITEM_SELECT, h_item) 
@@ -64,7 +69,7 @@ class Command:
             e.focus()
             
     def on_state(self, ed_self, state):
-        if state==EDSTATE_TAB_TITLE:
+        if state in [EDSTATE_TAB_TITLE, EDSTATE_MODIFIED]:
             self.update()
             
     def on_start(self, ed_self):
@@ -75,7 +80,7 @@ class Command:
         prop = tree_proc(self.h_tree, TREE_ITEM_GET_PROP, h_item)
         if prop is None: return
         s = prop[0]
-        s = re.findall('\d+', s)[0]
+        s = re.findall('\[Tab(\d+)\]', s)[0]
         index = int(s)-1
         h = ed_handles()[index]
         e = Editor(h)
