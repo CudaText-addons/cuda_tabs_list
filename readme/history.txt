@@ -1,4 +1,7 @@
 
+2017.03.24
++ option in __init__.py: option_open_at_start = False
+
 2016.07.22
 + change of tab-is-modified shown as '*'
 + tab-indexes in brackets hidden

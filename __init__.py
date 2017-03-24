@@ -1,8 +1,7 @@
 from cudatext import *
 import cudatext_cmd
 
-if app_api_version()<'1.0.151':
-    msg_box('TabsList needs updated CudaText', MB_OK+MB_ICONERROR)
+option_open_at_start = False
 
 
 class Command:
@@ -72,7 +71,8 @@ class Command:
             self.update()
 
     def on_start(self, ed_self):
-        self.open(False)
+        if option_open_at_start:
+            self.open(False)
 
     def ed_of_sel(self):
         h_item = tree_proc(self.h_tree, TREE_ITEM_GET_SELECTED)
