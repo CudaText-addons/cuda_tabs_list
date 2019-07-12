@@ -1,30 +1,52 @@
+import os
 from cudatext import *
 import cudatext_cmd
 
-option_open_at_start = False
-
+fn_icon = 'tabs.png'
 
 class Command:
     title = 'Tabs'
+    h_dlg = None
     h_tree = None
+    h_menu = None
     busy_update = False
 
-    def open(self, activate_tab=True):
-        ed.cmd(cudatext_cmd.cmd_ShowSidePanelAsIs)
-        app_proc(PROC_SIDEPANEL_ADD, self.title+",-1,tree")
-        if activate_tab:
-            app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
+    def __init__(self):
+        pass
 
-        app_proc(PROC_MENU_CLEAR, 'side:'+self.title)
-        app_proc(PROC_MENU_ADD, 'side:'+self.title+';cuda_tabs_list,menu_close_sel;Close;-1')
-        app_proc(PROC_MENU_ADD, 'side:'+self.title+';cuda_tabs_list,menu_close_others;Close others;-1')
-        app_proc(PROC_MENU_ADD, 'side:'+self.title+';0;-;-1')
-        app_proc(PROC_MENU_ADD, 'side:'+self.title+';cuda_tabs_list,menu_copy_file_name;Copy filename only;-1')
-        app_proc(PROC_MENU_ADD, 'side:'+self.title+';cuda_tabs_list,menu_copy_file_path;Copy full filepath;-1')
+    def open(self):
 
-        self.h_tree = app_proc(PROC_SIDEPANEL_GET_CONTROL, self.title)
-        tree_proc(self.h_tree, TREE_PROP_SHOW_ROOT, 0, 0, '0')
+        if not self.h_dlg:
+            self.init_form()
+        app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
         self.update()
+
+    def init_form(self):
+
+        self.h_dlg = dlg_proc(0, DLG_CREATE)
+
+        n = dlg_proc(self.h_dlg, DLG_CTL_ADD, prop='treeview')
+        dlg_proc(self.h_dlg, DLG_CTL_PROP_SET, index=n, prop={
+            'name':'tree',
+            'a_r':('',']'), #anchor to entire form: l,r,t,b
+            'a_b':('',']'),
+            'on_select': 'cuda_tabs_list.tree_on_sel',
+            'on_menu': 'cuda_tabs_list.tree_on_menu',
+            } )
+
+        self.h_tree = dlg_proc(self.h_dlg, DLG_CTL_HANDLE, index=n)
+        tree_proc(self.h_tree, TREE_THEME)
+        tree_proc(self.h_tree, TREE_PROP_SHOW_ROOT, 0, 0, '0')
+
+        app_proc(PROC_SIDEPANEL_ADD_DIALOG, (self.title, self.h_dlg, fn_icon))
+
+        self.h_menu = menu_proc(0, MENU_CREATE)
+        menu_proc(self.h_menu, MENU_CLEAR)
+        menu_proc(self.h_menu, MENU_ADD, caption='Close', command='cuda_tabs_list.menu_close_sel')
+        menu_proc(self.h_menu, MENU_ADD, caption='Close others', command='cuda_tabs_list.menu_close_others')
+        menu_proc(self.h_menu, MENU_ADD, caption='-', command='')
+        menu_proc(self.h_menu, MENU_ADD, caption='Copy filename only', command='cuda_tabs_list.menu_copy_file_name')
+        menu_proc(self.h_menu, MENU_ADD, caption='Copy full filepath', command='cuda_tabs_list.menu_copy_file_path')
 
     def on_focus(self, ed_self):
         self.update()
@@ -48,8 +70,8 @@ class Command:
         for h in handles:
             edit = Editor(h)
             image_index = h-handles[0]
-            prefix_mod = '*' if edit.get_prop(PROP_MODIFIED) else ''
-            name = prefix_mod + edit.get_prop(PROP_TAB_TITLE)
+            #prefix_mod = '*' if edit.get_prop(PROP_MODIFIED) else ''
+            name = edit.get_prop(PROP_TAB_TITLE)
             h_item = tree_proc(self.h_tree, TREE_ITEM_ADD, 0, -1, name, image_index)
             if edit.get_prop(PROP_TAG)=='tag':
                 tree_proc(self.h_tree, TREE_ITEM_SELECT, h_item)
@@ -57,28 +79,16 @@ class Command:
 
         self.busy_update = False
 
-    def on_panel(self, ed_self, id_control, id_event):
-        if self.h_tree is None: return
-        if self.h_tree!=id_control: return
-        if self.busy_update: return
-
-        if id_event=='on_sel':
-            e = self.ed_of_sel()
-            e.focus()
 
     def on_state(self, ed_self, state):
         if state in [EDSTATE_TAB_TITLE, EDSTATE_MODIFIED]:
             self.update()
 
-    def on_start(self, ed_self):
-        if option_open_at_start:
-            self.open(False)
-
     def ed_of_sel(self):
         h_item = tree_proc(self.h_tree, TREE_ITEM_GET_SELECTED)
-        prop = tree_proc(self.h_tree, TREE_ITEM_GET_PROP, h_item)
+        prop = tree_proc(self.h_tree, TREE_ITEM_GET_PROPS, h_item)
         if prop is None: return
-        index = prop[2] #image_index
+        index = prop['icon'] #image_index
         h = ed_handles()[index]
         e = Editor(h)
         return e
@@ -98,3 +108,15 @@ class Command:
     def menu_copy_file_name(self):
         e = self.ed_of_sel()
         e.cmd(cudatext_cmd.cmd_CopyFilenameName)
+
+
+    def tree_on_sel(self, id_dlg, id_ctl, data='', info=''):
+        if self.h_tree is None: return
+        if self.busy_update: return
+
+        e = self.ed_of_sel()
+        e.focus()
+
+    def tree_on_menu(self, id_dlg, id_ctl, data='', info=''):
+        if self.h_menu is None: return
+        menu_proc(self.h_menu, MENU_SHOW, command='')
